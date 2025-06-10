@@ -1,0 +1,26 @@
+From c0aba05ed36f6f48b5446aae2944f80a338a6803 Mon Sep 17 00:00:00 2001
+From: Alex Vega <axvg@users.noreply.github.com>
+Date: Sun, 8 Jun 2025 00:21:24 -0500
+Subject: [PATCH 06/13] =?UTF-8?q?feat(tf):=20a=C3=B1ade=20recurso=20con=20?=
+ =?UTF-8?q?null=5Fresource=20para=20network=5Fmodule?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ iac/monorepo/network-module/main.tf | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/iac/monorepo/network-module/main.tf b/iac/monorepo/network-module/main.tf
+index e69de29..6823a0b 100644
+--- a/iac/monorepo/network-module/main.tf
++++ b/iac/monorepo/network-module/main.tf
+@@ -0,0 +1,5 @@
++resource "null_resource" "network-1" {
++  provisioner "local-exec" {
++    command = "echo 'Creando network ${var.name} con puerto ${var.port}'"
++  }
++}
+-- 
+2.45.1.windows.1
+

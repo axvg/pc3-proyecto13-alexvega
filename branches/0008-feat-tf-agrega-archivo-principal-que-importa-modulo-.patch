@@ -1,0 +1,27 @@
+From d6532d88f02bd8312852c9c66a3daa5941f5aaf9 Mon Sep 17 00:00:00 2001
+From: Alex Vega <axvg@users.noreply.github.com>
+Date: Sun, 8 Jun 2025 18:21:15 -0500
+Subject: [PATCH 08/13] feat(tf): agrega archivo principal que importa modulo
+ de network
+
+---
+ iac/monorepo/main.tf | 6 ++++++
+ 1 file changed, 6 insertions(+)
+ create mode 100644 iac/monorepo/main.tf
+
+diff --git a/iac/monorepo/main.tf b/iac/monorepo/main.tf
+new file mode 100644
+index 0000000..f26e2e6
+--- /dev/null
++++ b/iac/monorepo/main.tf
+@@ -0,0 +1,6 @@
++module "network" {
++  source = "./network_module"
++
++  name = "network-1"
++  port = 8080
++}
+\ No newline at end of file
+-- 
+2.45.1.windows.1
+

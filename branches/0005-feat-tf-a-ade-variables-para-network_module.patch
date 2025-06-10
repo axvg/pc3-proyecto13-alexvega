@@ -1,0 +1,30 @@
+From efd1fa171d4f1bdbb4b4e32ca6f3da0cfb546bca Mon Sep 17 00:00:00 2001
+From: Alex Vega <axvg@users.noreply.github.com>
+Date: Sun, 8 Jun 2025 00:17:32 -0500
+Subject: [PATCH 05/13] =?UTF-8?q?feat(tf):=20a=C3=B1ade=20variables=20para?=
+ =?UTF-8?q?=20network=5Fmodule?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ iac/monorepo/network-module/variables.tf | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/iac/monorepo/network-module/variables.tf b/iac/monorepo/network-module/variables.tf
+index e69de29..12d0217 100644
+--- a/iac/monorepo/network-module/variables.tf
++++ b/iac/monorepo/network-module/variables.tf
+@@ -0,0 +1,9 @@
++variable "name" {
++  type    = string
++  default = "network-us-east-1"
++}
++
++variable "port" {
++  type    = number
++  default = 8080
++}
+-- 
+2.45.1.windows.1
+

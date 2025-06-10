@@ -1,0 +1,45 @@
+From abf4fa6aa7050b91dd003eddb89ac3dd8f10c7fc Mon Sep 17 00:00:00 2001
+From: Alex Vega <axvg@users.noreply.github.com>
+Date: Sun, 8 Jun 2025 18:52:14 -0500
+Subject: [PATCH 10/13] feat(tf): agrega clase para generar archivo tf.json que
+ generara recurso network
+
+---
+ iac/monorepo/network_module/__init__.py |  0
+ iac/monorepo/network_module/network.py  | 20 ++++++++++++++++++++
+ 2 files changed, 20 insertions(+)
+ create mode 100644 iac/monorepo/network_module/__init__.py
+ create mode 100644 iac/monorepo/network_module/network.py
+
+diff --git a/iac/monorepo/network_module/__init__.py b/iac/monorepo/network_module/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/network_module/network.py b/iac/monorepo/network_module/network.py
+new file mode 100644
+index 0000000..a76706d
+--- /dev/null
++++ b/iac/monorepo/network_module/network.py
+@@ -0,0 +1,20 @@
++class NetworkFactoryModule:
++    def __init__(self, name, port):
++        self.name = name
++        self.port = port
++        self.network_name = f"{self.name}-us-east"
++
++    def build(self):
++        command = (
++            f"echo 'Creando network {self.network_name} " f"con puerto {self.port}'"
++        )
++
++        return [
++            {
++                "null_resource": {
++                    self.name: {
++                        "provisioner": {"local-exec": {"command": command}},
++                    },
++                }
++            }
++        ]
+-- 
+2.45.1.windows.1
+

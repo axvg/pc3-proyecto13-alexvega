@@ -1,0 +1,82 @@
+From 304da566cfab444cb80a22af070f76530393e5ce Mon Sep 17 00:00:00 2001
+From: Alex Vega <axvg@users.noreply.github.com>
+Date: Thu, 5 Jun 2025 23:58:00 -0500
+Subject: [PATCH 01/13] feat(structure): agrega estructura inicial con scripts,
+ archivos vacios y directorio base
+
+---
+ README.md                                | 0
+ docs/.gitkeep                            | 0
+ iac/monorepo/compute-module/main.tf      | 0
+ iac/monorepo/compute-module/variables.tf | 0
+ iac/monorepo/network-module/main.tf      | 0
+ iac/monorepo/network-module/variables.tf | 0
+ iac/monorepo/storage-module/main.tf      | 0
+ iac/monorepo/storage-module/variables.tf | 0
+ iac/multirepo/compute-repo/.gitkeep      | 0
+ iac/multirepo/network-repo/.gitkeep      | 0
+ iac/multirepo/storage-repo/.gitkeep      | 0
+ script/validate.sh                       | 0
+ src/conftest.py                          | 0
+ tests/.gitkeep                           | 0
+ 14 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 README.md
+ create mode 100644 docs/.gitkeep
+ create mode 100644 iac/monorepo/compute-module/main.tf
+ create mode 100644 iac/monorepo/compute-module/variables.tf
+ create mode 100644 iac/monorepo/network-module/main.tf
+ create mode 100644 iac/monorepo/network-module/variables.tf
+ create mode 100644 iac/monorepo/storage-module/main.tf
+ create mode 100644 iac/monorepo/storage-module/variables.tf
+ create mode 100644 iac/multirepo/compute-repo/.gitkeep
+ create mode 100644 iac/multirepo/network-repo/.gitkeep
+ create mode 100644 iac/multirepo/storage-repo/.gitkeep
+ create mode 100644 script/validate.sh
+ create mode 100644 src/conftest.py
+ create mode 100644 tests/.gitkeep
+
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..e69de29
+diff --git a/docs/.gitkeep b/docs/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/compute-module/main.tf b/iac/monorepo/compute-module/main.tf
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/compute-module/variables.tf b/iac/monorepo/compute-module/variables.tf
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/network-module/main.tf b/iac/monorepo/network-module/main.tf
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/network-module/variables.tf b/iac/monorepo/network-module/variables.tf
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/storage-module/main.tf b/iac/monorepo/storage-module/main.tf
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/monorepo/storage-module/variables.tf b/iac/monorepo/storage-module/variables.tf
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/multirepo/compute-repo/.gitkeep b/iac/multirepo/compute-repo/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/multirepo/network-repo/.gitkeep b/iac/multirepo/network-repo/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/iac/multirepo/storage-repo/.gitkeep b/iac/multirepo/storage-repo/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/script/validate.sh b/script/validate.sh
+new file mode 100644
+index 0000000..e69de29
+diff --git a/src/conftest.py b/src/conftest.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/tests/.gitkeep b/tests/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+-- 
+2.45.1.windows.1
+

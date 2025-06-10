@@ -1,0 +1,24 @@
+From 47ec01c6f7a898eaf49879260ae250008400702f Mon Sep 17 00:00:00 2001
+From: Alex Vega <axvg@users.noreply.github.com>
+Date: Sun, 8 Jun 2025 18:20:58 -0500
+Subject: [PATCH 07/13] fix(tf): arregla nombres de directorios network para
+ import
+
+---
+ iac/monorepo/{network-module => network_module}/main.tf      | 0
+ iac/monorepo/{network-module => network_module}/variables.tf | 0
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ rename iac/monorepo/{network-module => network_module}/main.tf (100%)
+ rename iac/monorepo/{network-module => network_module}/variables.tf (100%)
+
+diff --git a/iac/monorepo/network-module/main.tf b/iac/monorepo/network_module/main.tf
+similarity index 100%
+rename from iac/monorepo/network-module/main.tf
+rename to iac/monorepo/network_module/main.tf
+diff --git a/iac/monorepo/network-module/variables.tf b/iac/monorepo/network_module/variables.tf
+similarity index 100%
+rename from iac/monorepo/network-module/variables.tf
+rename to iac/monorepo/network_module/variables.tf
+-- 
+2.45.1.windows.1
+
