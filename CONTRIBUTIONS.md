@@ -61,3 +61,28 @@
 - **Tarea en kanban board**: [https://github.com/grupo10-CC3S2/Proyecto13-PC3/issues/18](https://github.com/grupo10-CC3S2/Proyecto13-PC3/issues/18)
 
 ## Sprint 3
+- **2025-06-16 (Dia 8)**:
+- Se borra el monorepo del repositorio del proyecto y se agrega como submodulo, esto para obtener un correcto versionamiento de modulos y tener todos los modulos dentro del monorepo.
+
+- **2025-06-17 (Dia 9)**:
+- Se agregan archivos de configuracion para pytest, librerias necesarias, se re-estructura los directorios para mayor claridad entre modulos e `imports` de `python` y `terraform`
+- **Pull request**: [https://github.com/grupo10-CC3S2/monorepo/pull/2](https://github.com/grupo10-CC3S2/monorepo/pull/2)
+
+- **2025-06-18 (Dia 10)**:
+- Se agregan `fixtures` y unit tests para los modulos con validaciones basicas de los metodos de clases factory, estos tests se crean en directorio `tests/unit`, tests para las version `v0.4.0`
+- **Pull request**: [https://github.com/grupo10-CC3S2/monorepo/pull/4](https://github.com/grupo10-CC3S2/monorepo/pull/4)
+
+- **2025-06-19 (Dia 11)**:
+- Se modifican las variables de los 3 modulos y se modifican los outputs para mostrar info resumida de cada recurso creado usando los archivos `tf`.
+- **Pull request**: [https://github.com/grupo10-CC3S2/monorepo/pull/6](https://github.com/grupo10-CC3S2/monorepo/pull/6)
+
+- Se modifican los scripts finales de simulacion de los 3 modulos, esto son: `check_network.sh` que imprime que la configuracion de red es correcta, `compute_tool.py` que imprime informacion de cada servidor creado y usando `random,randint` genera un valor de ID aletario y `backup_storage.sh` que simula backup creando y modificando archivos txt con logs y con conteo de ejecuciones, version de modulos `v0.8.0`
+- **Pull request**: [https://github.com/grupo10-CC3S2/monorepo/pull/8](https://github.com/grupo10-CC3S2/monorepo/pull/8)
+
+- Se agregan un test de contrato para el modulo `network_module` que usando una clase `Facade` valida si el otuput de `Factory` es correcto, se modifican test unitarios para test parametrizados.
+- Se agregan tests unitarios con validaciones de puertos y numero de instancias usando lenguaje DSL de terraform para los 3 modulos.
+- Se modifican los test unitarios para agrega validaciones de puertos y numero de instancias.
+- **Pull request**: [https://github.com/grupo10-CC3S2/monorepo/pull/10](https://github.com/grupo10-CC3S2/monorepo/pull/10)
+
+- Se agregan validaciones en modulos python y terraform para puertos y numero de instancias para la version `v1.0.0`
+- **Pull request**: [https://github.com/grupo10-CC3S2/monorepo/pull/12](https://github.com/grupo10-CC3S2/monorepo/pull/12)
