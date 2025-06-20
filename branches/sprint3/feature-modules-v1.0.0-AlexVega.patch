@@ -1,0 +1,193 @@
+diff --git a/modules/python/compute_module/server.py b/modules/python/compute_module/server.py
+index 41af4d7..cd98e20 100644
+--- a/modules/python/compute_module/server.py
++++ b/modules/python/compute_module/server.py
+@@ -1,5 +1,8 @@
+ class ServerFactoryModule:
+     def __init__(self, name, network, instance_count=1):
++        if not isinstance(instance_count, int) or instance_count <= 0:
++            raise ValueError("El numero de instancias debe ser positivo")
++
+         self.name = name
+         self.network = network
+         self.server_type = "web"
+diff --git a/modules/python/network_module/network.py b/modules/python/network_module/network.py
+index 3025bdb..490cbed 100644
+--- a/modules/python/network_module/network.py
++++ b/modules/python/network_module/network.py
+@@ -7,7 +7,10 @@ class NetworkFacade:
+ 
+ 
+ class NetworkFactoryModule:
+-    def __init__(self, name, port, region="us-east"):
++    def __init__(self, name, port=80, region="us-east"):
++        if not isinstance(port, int) or port <= 0 or port > 65535:
++            raise ValueError("El puerto debe estar entre 1 y 65535")
++
+         self.name = name
+         self.port = port
+         self.region = region
+diff --git a/modules/terraform/compute_module/outputs.tf b/modules/terraform/compute_module/outputs.tf
+index 82d356b..4c8110c 100644
+--- a/modules/terraform/compute_module/outputs.tf
++++ b/modules/terraform/compute_module/outputs.tf
+@@ -11,7 +11,7 @@ output "compute_info" {
+       region       = var.region
+       network_name = var.network_name
+       index_count  = i + 1
+-      version      = "v0.8.0"
++      version      = "v1.0.0"
+     }
+   ]
+   depends_on = [var.network_name]
+diff --git a/modules/terraform/compute_module/variables.tf b/modules/terraform/compute_module/variables.tf
+index 0e908b1..45e60e3 100644
+--- a/modules/terraform/compute_module/variables.tf
++++ b/modules/terraform/compute_module/variables.tf
+@@ -10,6 +10,11 @@ variable "network_name" {
+ variable "instance_count" {
+   type    = number
+   default = 1
++
++  validation {
++    condition     = var.instance_count > 0
++    error_message = "El numero de isntancias debe ser positivo"
++  }
+ }
+ 
+ variable "region" {
+diff --git a/modules/terraform/network_module/outputs.tf b/modules/terraform/network_module/outputs.tf
+index d58c5a4..34cccb5 100644
+--- a/modules/terraform/network_module/outputs.tf
++++ b/modules/terraform/network_module/outputs.tf
+@@ -9,6 +9,6 @@ output "network_info" {
+     name    = var.name
+     port    = var.port
+     region  = var.region
+-    version = "v0.8.0"
++    version = "v1.0.0"
+   }
+ }
+diff --git a/modules/terraform/network_module/variables.tf b/modules/terraform/network_module/variables.tf
+index 16edc89..cf3ca10 100644
+--- a/modules/terraform/network_module/variables.tf
++++ b/modules/terraform/network_module/variables.tf
+@@ -6,6 +6,11 @@ variable "name" {
+ variable "port" {
+   type    = number
+   default = 8080
++
++  validation {
++    condition     = var.port > 0 && var.port <= 65535
++    error_message = "El puerto debe estar entre 1 y 65535"
++  }
+ }
+ 
+ variable "region" {
+diff --git a/modules/terraform/storage_module/outputs.tf b/modules/terraform/storage_module/outputs.tf
+index 12df2c5..c7512c1 100644
+--- a/modules/terraform/storage_module/outputs.tf
++++ b/modules/terraform/storage_module/outputs.tf
+@@ -22,7 +22,7 @@ output "storage_info" {
+     size           = var.size
+     backup_enabled = var.backup_enabled
+     region         = var.region
+-    version        = "v0.8.0"
++    version        = "v1.0.0"
+   }
+   depends_on = [var.network_name, var.server_name]
+ }
+diff --git a/modules/terraform/storage_module/variables.tf b/modules/terraform/storage_module/variables.tf
+index 57c83ee..dc4b56e 100644
+--- a/modules/terraform/storage_module/variables.tf
++++ b/modules/terraform/storage_module/variables.tf
+@@ -1,6 +1,6 @@
+ variable "name" {
+   type    = string
+-  default = "db-1-us-east"
++  default = "db"
+ }
+ 
+ variable "network_name" {
+diff --git a/rollback.sh b/rollback.sh
+deleted file mode 100644
+index 6a38759..0000000
+--- a/rollback.sh
++++ /dev/null
+@@ -1,50 +0,0 @@
+-#!/usr/bin/env bash
+-
+-set -e
+-
+-MODULE_NAME=$1
+-
+-MODULE_DIR="./modules/terraform/$MODULE_NAME"
+-
+-if [ ! -d "$MODULE_DIR" ]; then
+-    echo "Error: Directorio del modulo no existe: $MODULE_DIR"
+-    exit 1
+-fi
+-
+-VERSION=${2:-"v0.8.0"}
+-
+-if [ -z "$MODULE_NAME" ]; then
+-    echo "Uso: $0 <nombre_modulo> [version]"
+-    echo "Modulos: compute_module, network_module, storage_module"
+-    echo "Ejemplo: $0 compute_module v0.4.0"
+-    exit 1
+-fi
+-
+-TAG_NAME="$MODULE_NAME/$VERSION"
+-
+-echo "Iniciando rollback del modulo de $MODULE_NAME..."
+-echo "Version objetivo: $VERSION"
+-echo "Tag: $TAG_NAME"
+-
+-IS_TAG_VALID=$(git tag -l "$TAG_NAME")
+-
+-if [ -z "$IS_TAG_VALID" ]; then
+-    echo "Error: tag $TAG_NAME no existe"
+-    exit 1
+-fi
+-
+-CURRENT_DIR=$(pwd)
+-
+-cd "$MODULE_DIR"
+-
+-echo "Realizando rollback a version $VERSION..."
+-git checkout "$TAG_NAME" -- .
+-
+-GREEN_START="\033[32m"
+-GREEN_END="\033[0m"
+-
+-echo -e "${GREEN_START}Rollback del modulo $MODULE_NAME completado ok.${GREEN_END}"
+-echo "Ahora el modulo $MODULE_NAME esta en version $VERSION"
+-
+-cd "$CURRENT_DIR"
+-exit 0
+diff --git a/simular_drift.sh b/simular_drift.sh
+deleted file mode 100644
+index d8a0590..0000000
+--- a/simular_drift.sh
++++ /dev/null
+@@ -1,19 +0,0 @@
+-#!/usr/bin/env bash
+-
+-STATE_FILE="environments/terraform/terraform.tfstate"
+-
+-if [ ! -f "$STATE_FILE" ]; then
+-    echo "Error: El archivo de estado de Terraform no existe: $STATE_FILE"
+-    echo "Ejecutar terraform plan antes"
+-    exit 1
+-fi
+-
+-echo "Simulando drift en el archivo de estado de Terraform: $STATE_FILE para el modulo de red..."
+-
+-echo "Cambiando nombre de recurso en estado"
+-sed -i 's/"network-1"/"network-1000"/g' "$STATE_FILE"
+-
+-echo "Cambiando puerto en estado"
+-sed -i 's/"port": 8080/"port": 5432/g' "$STATE_FILE"
+-
+-echo "Drift simulado, habra diferencias de configuraciones, ejecutar terraform plan"
+\ No newline at end of file

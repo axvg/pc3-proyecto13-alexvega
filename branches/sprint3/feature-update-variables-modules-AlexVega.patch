@@ -1,0 +1,159 @@
+diff --git a/environments/terraform/main.tf b/environments/terraform/main.tf
+index 4693526..045ae0b 100644
+--- a/environments/terraform/main.tf
++++ b/environments/terraform/main.tf
+@@ -9,7 +9,7 @@ module "compute" {
+   source = "../../modules/terraform/compute_module"
+ 
+   instance_count = 4
+-  name           = "server-1"
++  name           = "server"
+   network_name   = module.network.network_name_out
+ 
+   depends_on = [module.network]
+diff --git a/environments/terraform/output.tf b/environments/terraform/output.tf
+new file mode 100644
+index 0000000..cdef51f
+--- /dev/null
++++ b/environments/terraform/output.tf
+@@ -0,0 +1,8 @@
++output "info_completa" {
++  description = "Info completa de la infraestructura"
++  value = {
++    network_info = module.network.network_info
++    compute_info = module.compute.compute_info
++    storage_info = module.db.storage_info
++  }
++}
+diff --git a/modules/terraform/compute_module/outputs.tf b/modules/terraform/compute_module/outputs.tf
+index 06b3ea3..f82e6a0 100644
+--- a/modules/terraform/compute_module/outputs.tf
++++ b/modules/terraform/compute_module/outputs.tf
+@@ -2,3 +2,17 @@ output "server_name_out" {
+   description = "El nombre del server creado"
+   value       = var.name
+ }
++
++output "compute_info" {
++  description = "Informacion de servidores creado"
++  value = [
++    for i in range(var.instance_count) : {
++      name         = "${var.name}-${i + 1}"
++      region       = var.region
++      network_name = var.network_name
++      index_count  = i + 1
++      version      = "v0.4.0"
++    }
++  ]
++  depends_on = [var.network_name]
++}
+diff --git a/modules/terraform/compute_module/variables.tf b/modules/terraform/compute_module/variables.tf
+index e47e16e..0e908b1 100644
+--- a/modules/terraform/compute_module/variables.tf
++++ b/modules/terraform/compute_module/variables.tf
+@@ -8,5 +8,11 @@ variable "network_name" {
+ }
+ 
+ variable "instance_count" {
+-  type = number
+-}
+\ No newline at end of file
++  type    = number
++  default = 1
++}
++
++variable "region" {
++  type    = string
++  default = "us-east"
++}
+diff --git a/modules/terraform/network_module/outputs.tf b/modules/terraform/network_module/outputs.tf
+index f4494b9..9a6cd4a 100644
+--- a/modules/terraform/network_module/outputs.tf
++++ b/modules/terraform/network_module/outputs.tf
+@@ -2,3 +2,13 @@ output "network_name_out" {
+   description = "El nombre de la network creada"
+   value       = var.name
+ }
++
++output "network_info" {
++  description = "Informacion de la network creada"
++  value = {
++    name    = var.name
++    port    = var.port
++    region  = var.region
++    version = "v0.4.0"
++  }
++}
+diff --git a/modules/terraform/network_module/variables.tf b/modules/terraform/network_module/variables.tf
+index 131a4b2..16edc89 100644
+--- a/modules/terraform/network_module/variables.tf
++++ b/modules/terraform/network_module/variables.tf
+@@ -1,9 +1,14 @@
+ variable "name" {
+   type    = string
+-  default = "network-1-us-east"
++  default = "network-1"
+ }
+ 
+ variable "port" {
+   type    = number
+   default = 8080
+ }
++
++variable "region" {
++  type    = string
++  default = "us-east"
++}
+diff --git a/modules/terraform/storage_module/outputs.tf b/modules/terraform/storage_module/outputs.tf
+index 6320e27..f86d105 100644
+--- a/modules/terraform/storage_module/outputs.tf
++++ b/modules/terraform/storage_module/outputs.tf
+@@ -5,5 +5,19 @@ output "db_name_out" {
+ 
+ output "storage_path" {
+   description = "Path de la db"
+-  value = "/db/${var.name}"
+-}
+\ No newline at end of file
++  value       = "/db/${var.name}"
++}
++
++output "storage_info" {
++  description = "Informacion de la db creada"
++  value = {
++    name           = var.name
++    network_name   = var.network_name
++    server_name    = var.server_name
++    size           = var.size
++    backup_enabled = var.backup_enabled
++    region         = var.region
++    version        = "v0.4.0"
++  }
++  depends_on = [var.network_name, var.server_name]
++}
+diff --git a/modules/terraform/storage_module/variables.tf b/modules/terraform/storage_module/variables.tf
+index de606f6..c571a24 100644
+--- a/modules/terraform/storage_module/variables.tf
++++ b/modules/terraform/storage_module/variables.tf
+@@ -9,4 +9,19 @@ variable "network_name" {
+ 
+ variable "server_name" {
+   type = string
+-}
+\ No newline at end of file
++}
++
++variable "size" {
++  type    = string
++  default = "2 TB"
++}
++
++variable "backup_enabled" {
++  type    = bool
++  default = true
++}
++
++variable "region" {
++  type    = string
++  default = "us-east"
++}

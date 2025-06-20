@@ -1,0 +1,141 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 42cf306..7dfb6e2 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -22,3 +22,53 @@ Terraform:
+ 
+ Python:
+ - Version inicial `database.py` que usa una clase constructora basada en el patron factory con parametros name, server y network (ambos son dependencias necesarias (compute, network) para la creacion del recurso de storage) y da como salida un diccionario que se usara en `main.py` de directorio raiz para generar archivo `tf.json` que sera usado finalmente para la creacion de una database que depende de la creacion de red y servidor
++
++## [v0.2.0]
++Para ambos archivos de todos los modulos se realiza un fix de nombre, se cambio de `computer_module` a `compute_module` y se realiza un cambio en la estructura de directorios para separar los tipos de archivos.
++
++## [v0.4.0]
++
++Se realizaron cambios en cada modulo en los archivos `output.tf` y `variables.tf` para mostrar informacion resumida de los recursos creados, estos se mostraran al ejecutar el comando `terraform apply` en el archivo `main.tf` principal. Tambien se agregan variable `version` para mostrar la version del modulo.
++
++### Modulo network
++Terraform:
++- Se agrega output para mostrar informacion resumida de la red creada, con name, port y region.
++
++### Modulo compute
++Terraform:
++- Se agrega output para mostrar informacion resumida del server creado, con name, network_name y count.
++
++### Modulo storage
++Terraform:
++- Se agrega output para mostrar informacion resumida de la base de datos creada, con name, server_name y network_name.
++
++## [v0.8.0]
++Para todos los modulos se agregan scripts que simulan ejecucion de validacion, calculo de ID o backup, estos se ejecutan al simular la creacion de los recursos con `null_resource`, usando `local-exec` para ejecutar `python3` y `bash`.
++
++### Modulo network
++Terraform:
++- Se agrega script `check_network.sh` que simula la validacion de la red creada, solo imprime mensajes de validacion.
++
++### Modulo compute
++Terraform:
++- Se agrega script `calculate_id.py` que simula el calculo de un ID para el server creado, para esto usa `random.randint` de python e imprime informacion de cada server creado.
++
++### Modulo storage
++Terraform:
++- Se agrega script `backup_database.sh` que simula la creacion de un backup de la base de datos creada, crea dos archivos txt, uno de log y otro de conteo de ejecucion.
++- Para que el conteo de ejeciones funcione, se agrega `trigger` en `null_resource` con `timestamp()` de terraform, de esta manera siempre se disparara la simulacion de este recurso.
++
++## [v1.0.0]
++Despues de realizar test unitarios basicos, se realizaron test con validaciones de `port` e `instance_count`, ya que estos no pueden ser negativos o cero, se agregaron validaciones en los archivos `variables.tf` de cada modulo, ademas de validacion en los script generadores de `python` en las clases factory.
++
++### Modulo network
++Terraform y python:
++- Se agrega validacion de `port` en `variables.tf` y `network.py` para que sea un numero entero mayor a 0 y menor a 65536.
++
++### Modulo compute
++Terraform y python:
++- Se agrega validacion de `instance_count` en `variables.tf` y `server.py` para que sea un numero entero mayor a 0.
++
++### Modulo storage
++Terraform y python:
++- Se modifica valor por defecto de `name` en `variables.tf`.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..6009369
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,77 @@
++### Monorepo
++
++Este monorepo contiene tres modulos de infraestructura para la simulacion de creacion de recursos en la nube. Cada modulo tiene su propio directorio y contiene archivos de Terraform `tf` y scripts de Python para la generacion de archivos `tf.json`.
++
++Los entornos estan divididos en `environments/python` que usa imports locales de python para crear recursos con los 3 modulos de python, y `environments/terraform` que usa los modulos de terraform para crear los mismos recursos. Ambos se pueden ejecutar en cada directorio, ejemplo:
++
++```sh
++cd environments/python
++python3 generate_infra.py
++# se creo el archivo main.tf.json
++terraform init
++terraform plan
++terraform apply -auto-approve
++# se crearon los recursos
++```
++
++#### Setup
++
++Para realizar la creacion de recursos, se requiere tener instalado Terraform y python. Sin embargo, se puede usar `devcontainer` para ejecutar los scripts y tests en este repositorio.
++
++#### Ejecucion de terraform
++Tambien, para ejecutar `main.tf` de `environments/terraform`, se tiene un archivo `Makefile` que permite ejecutar los comandos de terraform de manera sencilla. Los comandos disponibles son:
++
++```sh
++make # o make tf-init
++make tf-plan # terraform plan
++make tf-aa # terraform apply -auto-approve
++make tf-ad # terraform destroy -auto-approve
++```
++Estos comandos se ejecutan desde la raiz del repositorio y se encargan de inicializar, planificar, aplicar y destruir los recursos de terraform.
++
++
++### Ejecucion de scripts
++
++Ambos scripts de bash que estan en el directorio `scripts` se pueden ejecutar directamente desde la raiz del repositorio.
++
++- `rollback.sh`: Este script simula un rollback de los recursos creados usando git tags.
++
++- `simular_drift.sh`: Este script simula un drift de los recursos creados, modificando el archivo `.tfstate`
++
++
++#### Instalacion de dependencias
++Estas librerias solo son necesarios para ejecutar tests y coverage, los scripts de python no usan librerias adicionales.
++
++Si estas en windows:
++```sh
++# Creacion de entorno virtual
++python -m venv venv
++source venv\Scripts\activate # en git bash
++pip install -r requirements.txt
++```
++
++Si estas en linux:
++```sh
++# Creacion de entorno virtual
++python3 -m venv venv
++source venv/bin/activate
++pip install -r requirements.txt
++```
++
++#### Ejecucion de tests
++Para ejecutar tests de python, solo se usa:
++
++```sh
++pytest
++```
++
++ya que se usa `pytest.ini` para la configuracion de coverage y generacion de reporte en html.
++
++Si se quiere ejecutar los tests de terraform, se puede usar el comando:
++
++```sh
++terraform test
++```
++desde la raiz del repositorio.
++
++

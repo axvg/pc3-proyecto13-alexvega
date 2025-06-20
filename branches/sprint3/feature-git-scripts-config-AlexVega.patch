@@ -1,0 +1,586 @@
+diff --git a/Makefile b/Makefile
+new file mode 100644
+index 0000000..488a4fe
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,23 @@
++tf-init:
++	terraform -chdir=environments/terraform init
++
++tf-plan:
++	terraform -chdir=environments/terraform plan
++
++tf-apply:
++	terraform -chdir=environments/terraform apply
++
++tf-aa:
++	terraform -chdir=environments/terraform apply -auto-approve
++
++tf-da:
++	terraform -chdir=environments/terraform destroy -auto-approve
++
++tf-test:
++	terraform init
++	terraform test
++
++tf-clean:
++	rm -rf environments/terraform/.terraform
++	rm -f environments/terraform/.terraform.lock.hcl
++	rm -f environments/terraform/terraform.tfstate*
+\ No newline at end of file
+diff --git a/modules/python/network_module/network.py b/modules/python/network_module/network.py
+index a76706d..3025bdb 100644
+--- a/modules/python/network_module/network.py
++++ b/modules/python/network_module/network.py
+@@ -1,12 +1,21 @@
++class NetworkFacade:
++    def __init__(self, network, name, port, region):
++        self._network = network
++        self._name = name
++        self._port = port
++        self._region = region
++
++
+ class NetworkFactoryModule:
+-    def __init__(self, name, port):
++    def __init__(self, name, port, region="us-east"):
+         self.name = name
+         self.port = port
+-        self.network_name = f"{self.name}-us-east"
++        self.region = region
++        self.network_name = f"{self.name}"
+ 
+     def build(self):
+         command = (
+-            f"echo 'Creando network {self.network_name} " f"con puerto {self.port}'"
++            f"echo 'Creando network {self.network_name} " f"con puerto {self.port} y region {self.region}'"
+         )
+ 
+         return [
+@@ -18,3 +27,11 @@ class NetworkFactoryModule:
+                 }
+             }
+         ]
++
++    def outputs(self):
++        return NetworkFacade(
++            network=self.network_name,
++            name=self.name,
++            port=self.port,
++            region=self.region
++        )
+diff --git a/pytest.ini b/pytest.ini
+index e69de29..65a1861 100644
+--- a/pytest.ini
++++ b/pytest.ini
+@@ -0,0 +1,11 @@
++[pytest]
++pythonpath = .
++addopts = --cov=modules/python --cov-report=term-missing --cov-report=html --cov-fail-under=80 -vv
++filterwarnings =
++    ignore::DeprecationWarning
++
++[coverage:run]
++source = modules/python
++omit =
++    tests/*
++    */tests/*
+\ No newline at end of file
+diff --git a/rollback.sh b/rollback.sh
+new file mode 100644
+index 0000000..6a38759
+--- /dev/null
++++ b/rollback.sh
+@@ -0,0 +1,50 @@
++#!/usr/bin/env bash
++
++set -e
++
++MODULE_NAME=$1
++
++MODULE_DIR="./modules/terraform/$MODULE_NAME"
++
++if [ ! -d "$MODULE_DIR" ]; then
++    echo "Error: Directorio del modulo no existe: $MODULE_DIR"
++    exit 1
++fi
++
++VERSION=${2:-"v0.8.0"}
++
++if [ -z "$MODULE_NAME" ]; then
++    echo "Uso: $0 <nombre_modulo> [version]"
++    echo "Modulos: compute_module, network_module, storage_module"
++    echo "Ejemplo: $0 compute_module v0.4.0"
++    exit 1
++fi
++
++TAG_NAME="$MODULE_NAME/$VERSION"
++
++echo "Iniciando rollback del modulo de $MODULE_NAME..."
++echo "Version objetivo: $VERSION"
++echo "Tag: $TAG_NAME"
++
++IS_TAG_VALID=$(git tag -l "$TAG_NAME")
++
++if [ -z "$IS_TAG_VALID" ]; then
++    echo "Error: tag $TAG_NAME no existe"
++    exit 1
++fi
++
++CURRENT_DIR=$(pwd)
++
++cd "$MODULE_DIR"
++
++echo "Realizando rollback a version $VERSION..."
++git checkout "$TAG_NAME" -- .
++
++GREEN_START="\033[32m"
++GREEN_END="\033[0m"
++
++echo -e "${GREEN_START}Rollback del modulo $MODULE_NAME completado ok.${GREEN_END}"
++echo "Ahora el modulo $MODULE_NAME esta en version $VERSION"
++
++cd "$CURRENT_DIR"
++exit 0
+diff --git a/scripts/rollback.sh b/scripts/rollback.sh
+new file mode 100644
+index 0000000..6a38759
+--- /dev/null
++++ b/scripts/rollback.sh
+@@ -0,0 +1,50 @@
++#!/usr/bin/env bash
++
++set -e
++
++MODULE_NAME=$1
++
++MODULE_DIR="./modules/terraform/$MODULE_NAME"
++
++if [ ! -d "$MODULE_DIR" ]; then
++    echo "Error: Directorio del modulo no existe: $MODULE_DIR"
++    exit 1
++fi
++
++VERSION=${2:-"v0.8.0"}
++
++if [ -z "$MODULE_NAME" ]; then
++    echo "Uso: $0 <nombre_modulo> [version]"
++    echo "Modulos: compute_module, network_module, storage_module"
++    echo "Ejemplo: $0 compute_module v0.4.0"
++    exit 1
++fi
++
++TAG_NAME="$MODULE_NAME/$VERSION"
++
++echo "Iniciando rollback del modulo de $MODULE_NAME..."
++echo "Version objetivo: $VERSION"
++echo "Tag: $TAG_NAME"
++
++IS_TAG_VALID=$(git tag -l "$TAG_NAME")
++
++if [ -z "$IS_TAG_VALID" ]; then
++    echo "Error: tag $TAG_NAME no existe"
++    exit 1
++fi
++
++CURRENT_DIR=$(pwd)
++
++cd "$MODULE_DIR"
++
++echo "Realizando rollback a version $VERSION..."
++git checkout "$TAG_NAME" -- .
++
++GREEN_START="\033[32m"
++GREEN_END="\033[0m"
++
++echo -e "${GREEN_START}Rollback del modulo $MODULE_NAME completado ok.${GREEN_END}"
++echo "Ahora el modulo $MODULE_NAME esta en version $VERSION"
++
++cd "$CURRENT_DIR"
++exit 0
+diff --git a/scripts/simular_drift.sh b/scripts/simular_drift.sh
+new file mode 100644
+index 0000000..935cd20
+--- /dev/null
++++ b/scripts/simular_drift.sh
+@@ -0,0 +1,19 @@
++#!/usr/bin/env bash
++
++STATE_FILE="./environments/terraform/terraform.tfstate"
++
++if [ ! -f "$STATE_FILE" ]; then
++    echo "Error: El archivo de estado de Terraform no existe: $STATE_FILE"
++    echo "Ejecutar terraform plan antes"
++    exit 1
++fi
++
++echo "Simulando drift en el archivo de estado de Terraform: $STATE_FILE para el modulo de red..."
++
++echo "Cambiando nombre de recurso en estado"
++sed -i 's/"network-1"/"network-1000"/g' "$STATE_FILE"
++
++echo "Cambiando puerto en estado"
++sed -i 's/"port": 8080/"port": 5432/g' "$STATE_FILE"
++
++echo "Drift simulado, habra diferencias de configuraciones, ejecutar terraform plan"
+\ No newline at end of file
+diff --git a/simular_drift.sh b/simular_drift.sh
+new file mode 100644
+index 0000000..d8a0590
+--- /dev/null
++++ b/simular_drift.sh
+@@ -0,0 +1,19 @@
++#!/usr/bin/env bash
++
++STATE_FILE="environments/terraform/terraform.tfstate"
++
++if [ ! -f "$STATE_FILE" ]; then
++    echo "Error: El archivo de estado de Terraform no existe: $STATE_FILE"
++    echo "Ejecutar terraform plan antes"
++    exit 1
++fi
++
++echo "Simulando drift en el archivo de estado de Terraform: $STATE_FILE para el modulo de red..."
++
++echo "Cambiando nombre de recurso en estado"
++sed -i 's/"network-1"/"network-1000"/g' "$STATE_FILE"
++
++echo "Cambiando puerto en estado"
++sed -i 's/"port": 8080/"port": 5432/g' "$STATE_FILE"
++
++echo "Drift simulado, habra diferencias de configuraciones, ejecutar terraform plan"
+\ No newline at end of file
+diff --git a/tests/compute_module.tftest.hcl b/tests/compute_module.tftest.hcl
+new file mode 100644
+index 0000000..c803c5c
+--- /dev/null
++++ b/tests/compute_module.tftest.hcl
+@@ -0,0 +1,66 @@
++run "test_compute_init" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/compute_module"
++  }
++
++  variables {
++    name           = "test-server"
++    network_name   = "test-network"
++    instance_count = 2
++    region         = "us-east"
++  }
++
++  assert {
++    condition     = output.server_name_out == "test-server"
++    error_message = "El nombre de output de server debe  coincidir con la variable input"
++  }
++
++  assert {
++    condition     = output.compute_info[0].name == "test-server-1"
++    error_message = "La primera instancia de server debe tener el nombre con su indice"
++  }
++}
++
++run "test_compute_multiple_instances" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/compute_module"
++  }
++
++  variables {
++    name           = "multi-server"
++    network_name   = "network"
++    instance_count = 5
++    region         = "us-west"
++  }
++
++  assert {
++    condition     = length(output.compute_info) == 5
++    error_message = "Deberia crear exactamente 5 instancias de server"
++  }
++
++  assert {
++    condition     = output.compute_info[4].name == "multi-server-5"
++    error_message = "Last server instance should have correct indexed name"
++  }
++}
++
++run "test_server_instance_count_invalid" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/compute_module"
++  }
++
++  variables {
++    name           = "server"
++    network_name   = "network"
++    instance_count = -12
++    region         = "us-east"
++  }
++
++  expect_failures = [var.instance_count]
++}
+diff --git a/tests/contract/test_network_facade.py b/tests/contract/test_network_facade.py
+new file mode 100644
+index 0000000..5512632
+--- /dev/null
++++ b/tests/contract/test_network_facade.py
+@@ -0,0 +1,45 @@
++from modules.python.network_module.network import NetworkFactoryModule, NetworkFacade
++import pytest
++
++network_name = 'hello-world'
++network_port = 8080
++network_region = 'us-west'
++
++
++@pytest.fixture
++def network_outputs():
++    network = NetworkFactoryModule(
++        name=network_name,
++        port=network_port,
++        region=network_region
++    )
++    return network.outputs()
++
++
++def test_network_output_is_facade(network_outputs):
++    assert isinstance(network_outputs, NetworkFacade)
++
++
++def test_network_output_has_network_name(network_outputs):
++    assert network_outputs._network == f"{network_name}"
++
++
++def test_network_output_has_port_and_region(network_outputs):
++    assert network_outputs._port == network_port
++    assert network_outputs._region == network_region
++
++
++@pytest.mark.parametrize("name,port,region", [
++    ("prod-network", 443, "us-east"),
++    ("dev-network", 8080, "us-west"),
++    ("test-network", 3000, "brazil"),
++    ("network12345", 9000, "peru")
++])
++def test_network_facade_parametrized(name, port, region):
++    network = NetworkFactoryModule(name=name, port=port, region=region)
++    outputs = network.outputs()
++
++    assert isinstance(outputs, NetworkFacade)
++    assert outputs._network == name
++    assert outputs._port == port
++    assert outputs._region == region
+diff --git a/tests/network_module.tftest.hcl b/tests/network_module.tftest.hcl
+new file mode 100644
+index 0000000..ac7d561
+--- /dev/null
++++ b/tests/network_module.tftest.hcl
+@@ -0,0 +1,63 @@
++run "test_network_init" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/network_module"
++  }
++
++  variables {
++    name   = "test-network"
++    port   = 8080
++    region = "us-east"
++  }
++
++  assert {
++    condition     = output.network_name_out == "test-network"
++    error_message = "El nombre de la red de output debe coincidir con la variable de entrada"
++  }
++
++  assert {
++    condition     = output.network_info.port == 8080
++    error_message = "El puerto de la información de la red debe coincidir con la entrada"
++  }
++}
++
++run "test_network_custom_data" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/network_module"
++  }
++
++  variables {
++    name   = "custom-network"
++    port   = 443
++    region = "us-west"
++  }
++
++  assert {
++    condition     = output.network_info.port == 443
++    error_message = "El puerto de la red debe ser 443"
++  }
++
++  assert {
++    condition     = output.network_info.region == "us-west"
++    error_message = "La red debe usar la region us-west"
++  }
++}
++
++run "test_network_ports" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/network_module"
++  }
++
++  variables {
++    name   = "network"
++    port   = 100000
++    region = "us-east"
++  }
++
++  expect_failures = [var.port]
++}
+diff --git a/tests/storage_module.tftest.hcl b/tests/storage_module.tftest.hcl
+new file mode 100644
+index 0000000..8cad5a5
+--- /dev/null
++++ b/tests/storage_module.tftest.hcl
+@@ -0,0 +1,62 @@
++run "test_storage_init" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/storage_module"
++  }
++
++  variables {
++    name           = "test-db"
++    network_name   = "test-network"
++    server_name    = "test-server"
++    size           = "0.5 TB"
++    backup_enabled = false
++    region         = "us-east"
++  }
++
++  assert {
++    condition     = output.db_name_out == "test-db"
++    error_message = "El nombre de db en output debe coincidir con el nombre de entrada"
++  }
++
++  assert {
++    condition     = output.storage_info.name == "test-db"
++    error_message = "El nombre de la info de db en la info output debe coincidir con la entrada"
++  }
++
++  assert {
++    condition     = output.storage_info.backup_enabled == false
++    error_message = "El valor de backup_enabled en la info de db output debe ser false"
++  }
++}
++
++
++run "test_storage_dependencies" {
++  command = plan
++
++  module {
++    source = "./modules/terraform/storage_module"
++  }
++
++  variables {
++    name         = "db"
++    network_name = "network"
++    server_name  = "server"
++    region       = "us-east"
++  }
++
++  assert {
++    condition     = output.storage_path == "/db/db"
++    error_message = "El nombre de db en output debe coincidir con el nombre de entrada"
++  }
++
++  assert {
++    condition     = output.storage_info.network_name == "network"
++    error_message = "El nombre de network en info output debe ser el mismo que el de entrada de dependencia"
++  }
++
++  assert {
++    condition     = output.storage_info.server_name == "server"
++    error_message = "El nombre de server en info output debe ser el mismo que el de entrada de dependencia"
++  }
++}
+diff --git a/tests/unit/test_compute_module.py b/tests/unit/test_compute_module.py
+index 75a5df9..4cf0a44 100644
+--- a/tests/unit/test_compute_module.py
++++ b/tests/unit/test_compute_module.py
+@@ -1,3 +1,6 @@
++import pytest
++
++
+ def test_server_initialization(server_factory, sample_network):
+     server_name = "test-server"
+     server_instance = server_factory(name=server_name, network=sample_network, instance_count=4)
+@@ -23,3 +26,22 @@ def test_build(sample_server):
+ 
+     expected_command = f"echo 'Creando server {sample_server.name} con network {sample_server.network.name}'"
+     assert resource["provisioner"]["local-exec"]["command"] == expected_command
++
++
++@pytest.mark.parametrize("name,instance_count,should_raise,error_msg", [
++    ("server", 1, False, None),
++    ("cien-server", 100, False, None),
++    ("zero-server", 0, True, "El numero de instancias debe ser positivo"),
++    ("negative-server", -1, True, "El numero de instancias debe ser positivo"),
++    ("float-server", 2.5, True, "El numero de instancias debe ser positivo"),
++    ("string-server", "4", True, "El numero de instancias debe ser positivo"),
++])
++def test_server_instance_count(server_factory, sample_network, name, instance_count, should_raise, error_msg):
++    if should_raise:
++        with pytest.raises(ValueError, match=error_msg):
++            server_factory(name=name, network=sample_network, instance_count=instance_count)
++    else:
++        server_instance = server_factory(name=name, network=sample_network, instance_count=instance_count)
++        assert server_instance.name == name
++        assert server_instance.instance_count == instance_count
++        assert server_instance.network == sample_network
+diff --git a/tests/unit/test_network_module.py b/tests/unit/test_network_module.py
+index 423c6f1..9e9d18a 100644
+--- a/tests/unit/test_network_module.py
++++ b/tests/unit/test_network_module.py
+@@ -1,3 +1,6 @@
++import pytest
++
++
+ def test_network_initialization(network_factory):
+     network_name = "test-network"
+     network_port = 8080
+@@ -23,5 +26,27 @@ def test_build(sample_network):
+     resource = result[0]["null_resource"]["test-network"]
+     assert "local-exec" in resource["provisioner"]
+ 
+-    expected_command = f"echo 'Creando network {sample_network.name}-us-east con puerto {sample_network.port}'"
++    expected_command = f"echo 'Creando network {sample_network.name} con puerto {sample_network.port} y region us-east'"
+     assert resource["provisioner"]["local-exec"]["command"] == expected_command
++
++
++@pytest.mark.parametrize("name,port,region,should_raise,error_msg", [
++    ("network", 80, None, False, None),
++    ("prod-network", 443, "us-east", False, None),
++    ("one-network", 1, None, False, None),
++    ("max-port-network", 65535, "us-east", False, None),
++    ("wrong-network", 0, "us-east", True, "El puerto debe estar entre 1 y 65535"),
++    ("negative-network", -1, None, True, "El puerto debe estar entre 1 y 65535"),
++    ("post-network", 100_000, "us-east", True, "El puerto debe estar entre 1 y 65535"),
++    ("float-network", 2.5, None, True, "El puerto debe estar entre 1 y 65535"),
++    ("string-network", "8080", None, True, "El puerto debe estar entre 1 y 65535"),
++])
++def test_network_ports(network_factory, name, port, region, should_raise, error_msg):
++    if should_raise:
++        with pytest.raises(ValueError, match=error_msg):
++            network_factory(name=name, port=port, region=region)
++    else:
++        network_instance = network_factory(name=name, port=port, region=region)
++        assert network_instance.name == name
++        assert network_instance.port == port
++        assert network_instance.region == region

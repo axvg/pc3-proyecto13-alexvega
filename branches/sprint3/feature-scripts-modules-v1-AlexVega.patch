@@ -1,0 +1,229 @@
+diff --git a/environments/terraform/main.tf b/environments/terraform/main.tf
+index 045ae0b..79a5363 100644
+--- a/environments/terraform/main.tf
++++ b/environments/terraform/main.tf
+@@ -18,9 +18,11 @@ module "compute" {
+ module "db" {
+   source = "../../modules/terraform/storage_module"
+ 
+-  name         = "db-1"
+-  server_name  = module.compute.server_name_out
+-  network_name = module.network.network_name_out
++  name           = "db-1"
++  server_name    = module.compute.server_name_out
++  network_name   = module.network.network_name_out
++  size           = "3.5 TB"
++  backup_enabled = true
+ 
+   depends_on = [module.network, module.compute]
+ }
+diff --git a/modules/terraform/compute_module/compute_tool.py b/modules/terraform/compute_module/compute_tool.py
+new file mode 100644
+index 0000000..7d87102
+--- /dev/null
++++ b/modules/terraform/compute_module/compute_tool.py
+@@ -0,0 +1,35 @@
++#!/usr/bin/env python3
++
++import sys
++import random
++
++
++def simulate_calculation(instance_number):
++    dummy_result = random.randint(1, 100) * instance_number
++    return dummy_result
++
++
++def main():
++    if len(sys.argv) != 5:
++        print("Uso: python3 compute_tool.py <nombre_instancia> <nombre_network> <numero_instancia> <region>")
++        sys.exit(1)
++
++    instance_name = sys.argv[1]
++    network_name = sys.argv[2]
++    instance_count = int(sys.argv[3])
++    region = sys.argv[4]
++
++    print("Configurando server...")
++    print(f"Nombre del server: {instance_name}")
++    print(f"Numero de servers: {instance_count}")
++    print(f"Nombre de la red: {network_name}")
++    print(f"Region: {region}")
++
++    result = simulate_calculation(instance_count)
++
++    print(f"ID generada del servidor: {result}")
++    print("Configuracion del server completada con exito!")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/modules/terraform/compute_module/main.tf b/modules/terraform/compute_module/main.tf
+index a1b2818..ef6d8a6 100644
+--- a/modules/terraform/compute_module/main.tf
++++ b/modules/terraform/compute_module/main.tf
+@@ -4,4 +4,8 @@ resource "null_resource" "server-1" {
+   provisioner "local-exec" {
+     command = "echo 'Creando server ${var.name} con network ${var.network_name}'"
+   }
++
++  provisioner "local-exec" {
++    command = "python3 '${path.module}/compute_tool.py' '${var.name}_${count.index + 1}' '${var.network_name}' '${count.index + 1}' '${var.region}'"
++  }
+ }
+diff --git a/modules/terraform/compute_module/outputs.tf b/modules/terraform/compute_module/outputs.tf
+index f82e6a0..82d356b 100644
+--- a/modules/terraform/compute_module/outputs.tf
++++ b/modules/terraform/compute_module/outputs.tf
+@@ -11,7 +11,7 @@ output "compute_info" {
+       region       = var.region
+       network_name = var.network_name
+       index_count  = i + 1
+-      version      = "v0.4.0"
++      version      = "v0.8.0"
+     }
+   ]
+   depends_on = [var.network_name]
+diff --git a/modules/terraform/network_module/check_network.sh b/modules/terraform/network_module/check_network.sh
+new file mode 100644
+index 0000000..fa0ce50
+--- /dev/null
++++ b/modules/terraform/network_module/check_network.sh
+@@ -0,0 +1,21 @@
++#!/usr/bin/env bash
++
++set -e
++
++NETWORK_NAME=$1
++PORT=$2
++REGION=$3
++
++echo "Revisando configuracion de red..."
++echo "Nombre de la red: $NETWORK_NAME"
++echo "Puerto: $PORT"
++echo "Region: $REGION"
++
++GREEN_START="\033[32m"
++GREEN_END="\033[0m"
++
++echo -e "${GREEN_START}La configuracion de red es correcta.${GREEN_END}"
++
++echo "Validacion de red completada!!"
++
++exit 0
+diff --git a/modules/terraform/network_module/main.tf b/modules/terraform/network_module/main.tf
+index 6823a0b..585a1ed 100644
+--- a/modules/terraform/network_module/main.tf
++++ b/modules/terraform/network_module/main.tf
+@@ -2,4 +2,8 @@ resource "null_resource" "network-1" {
+   provisioner "local-exec" {
+     command = "echo 'Creando network ${var.name} con puerto ${var.port}'"
+   }
++
++  provisioner "local-exec" {
++    command = "bash '${path.module}/check_network.sh' '${var.name}' '${var.port}' '${var.region}'"
++  }
+ }
+diff --git a/modules/terraform/network_module/outputs.tf b/modules/terraform/network_module/outputs.tf
+index 9a6cd4a..d58c5a4 100644
+--- a/modules/terraform/network_module/outputs.tf
++++ b/modules/terraform/network_module/outputs.tf
+@@ -9,6 +9,6 @@ output "network_info" {
+     name    = var.name
+     port    = var.port
+     region  = var.region
+-    version = "v0.4.0"
++    version = "v0.8.0"
+   }
+ }
+diff --git a/modules/terraform/storage_module/backup_storage.sh b/modules/terraform/storage_module/backup_storage.sh
+new file mode 100644
+index 0000000..ca055d7
+--- /dev/null
++++ b/modules/terraform/storage_module/backup_storage.sh
+@@ -0,0 +1,29 @@
++#!/usr/bin/env bash
++
++DB_NAME=$1
++
++BACKUP_DIR="./backup/$DB_NAME"
++COUNTER_FILE="$BACKUP_DIR/backup_runs.txt"
++
++if [ ! -d "$BACKUP_DIR" ]; then
++    mkdir -p "$BACKUP_DIR"
++    echo "Se creo directorio backup en $BACKUP_DIR"
++else
++    echo "Directorio backup ya existe en $BACKUP_DIR"
++fi
++
++if [ ! -f "$COUNTER_FILE" ]; then
++    echo "1" > "$COUNTER_FILE"
++    RUN_NUMBER=1
++else
++    CURRENT_RUN=$(cat "$COUNTER_FILE")
++    RUN_NUMBER=$((CURRENT_RUN + 1))
++    echo "$RUN_NUMBER" > "$COUNTER_FILE"
++fi
++
++
++echo "Iniciando backup para la db: $DB_NAME"
++echo "Numero de ejecucion: $RUN_NUMBER"
++
++echo "Ejecucion #$RUN_NUMBER  de $DB_NAME - $(date)" >> "$BACKUP_DIR/backup_log.txt"
++echo "Backup realizado con exito!"
+diff --git a/modules/terraform/storage_module/main.tf b/modules/terraform/storage_module/main.tf
+index f09c0af..69318c9 100644
+--- a/modules/terraform/storage_module/main.tf
++++ b/modules/terraform/storage_module/main.tf
+@@ -1,5 +1,13 @@
+ resource "null_resource" "db-1" {
++  triggers = {
++    always_run = timestamp()
++  }
++
+   provisioner "local-exec" {
+     command = "echo 'Creando database ${var.name} con server ${var.server_name} con network ${var.network_name}'"
+   }
++
++  provisioner "local-exec" {
++    command = var.backup_enabled ? "bash '${path.module}/backup_storage.sh' '${var.name}' 'full'" : "echo 'Sin backup para la db ${var.name}'"
++  }
+ }
+diff --git a/modules/terraform/storage_module/outputs.tf b/modules/terraform/storage_module/outputs.tf
+index f86d105..12df2c5 100644
+--- a/modules/terraform/storage_module/outputs.tf
++++ b/modules/terraform/storage_module/outputs.tf
+@@ -8,6 +8,11 @@ output "storage_path" {
+   value       = "/db/${var.name}"
+ }
+ 
++output "backup_path" {
++  description = "Path del backup de la db"
++  value       = "./backup/${var.name}"
++}
++
+ output "storage_info" {
+   description = "Informacion de la db creada"
+   value = {
+@@ -17,7 +22,7 @@ output "storage_info" {
+     size           = var.size
+     backup_enabled = var.backup_enabled
+     region         = var.region
+-    version        = "v0.4.0"
++    version        = "v0.8.0"
+   }
+   depends_on = [var.network_name, var.server_name]
+ }
+diff --git a/modules/terraform/storage_module/variables.tf b/modules/terraform/storage_module/variables.tf
+index c571a24..57c83ee 100644
+--- a/modules/terraform/storage_module/variables.tf
++++ b/modules/terraform/storage_module/variables.tf
+@@ -18,7 +18,7 @@ variable "size" {
+ 
+ variable "backup_enabled" {
+   type    = bool
+-  default = true
++  default = false
+ }
+ 
+ variable "region" {

@@ -1,0 +1,550 @@
+diff --git a/.bandit b/.bandit
+deleted file mode 100644
+index 450852e..0000000
+--- a/.bandit
++++ /dev/null
+@@ -1,6 +0,0 @@
+-[bandit]
+-exclude = .git,.pytest_cache,.venv,venv,.terraform,tests
+-skips = B101,B311
+-severity-level = MEDIUM
+-confidence-level = MEDIUM
+-recursive = True
+diff --git a/.flake8 b/.flake8
+deleted file mode 100644
+index d6b6fde..0000000
+--- a/.flake8
++++ /dev/null
+@@ -1,16 +0,0 @@
+-[flake8]
+-max-line-length = 120
+-exclude = 
+-    .git,
+-    __pycache__,
+-    build,
+-    dist,
+-    .venv,
+-    venv,
+-    .terraform
+-
+-ignore = 
+-    E203,
+-    W503,
+-    E501,
+-    F401 
+diff --git a/.gitignore b/.gitignore
+deleted file mode 100644
+index ec7e13c..0000000
+--- a/.gitignore
++++ /dev/null
+@@ -1,212 +0,0 @@
+-# Created by https://www.toptal.com/developers/gitignore/api/python,terraform
+-# Edit at https://www.toptal.com/developers/gitignore?templates=python,terraform
+-
+-### Python ###
+-# Byte-compiled / optimized / DLL files
+-__pycache__/
+-*.py[cod]
+-*$py.class
+-
+-# C extensions
+-*.so
+-
+-# Distribution / packaging
+-.Python
+-build/
+-develop-eggs/
+-dist/
+-downloads/
+-eggs/
+-.eggs/
+-lib/
+-lib64/
+-parts/
+-sdist/
+-var/
+-wheels/
+-share/python-wheels/
+-*.egg-info/
+-.installed.cfg
+-*.egg
+-MANIFEST
+-
+-# PyInstaller
+-#  Usually these files are written by a python script from a template
+-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+-*.manifest
+-*.spec
+-
+-# Installer logs
+-pip-log.txt
+-pip-delete-this-directory.txt
+-
+-# Unit test / coverage reports
+-htmlcov/
+-.tox/
+-.nox/
+-.coverage
+-.coverage.*
+-.cache
+-nosetests.xml
+-coverage.xml
+-*.cover
+-*.py,cover
+-.hypothesis/
+-.pytest_cache/
+-cover/
+-
+-# Translations
+-*.mo
+-*.pot
+-
+-# Django stuff:
+-*.log
+-local_settings.py
+-db.sqlite3
+-db.sqlite3-journal
+-
+-# Flask stuff:
+-instance/
+-.webassets-cache
+-
+-# Scrapy stuff:
+-.scrapy
+-
+-# Sphinx documentation
+-docs/_build/
+-
+-# PyBuilder
+-.pybuilder/
+-target/
+-
+-# Jupyter Notebook
+-.ipynb_checkpoints
+-
+-# IPython
+-profile_default/
+-ipython_config.py
+-
+-# pyenv
+-#   For a library or package, you might want to ignore these files since the code is
+-#   intended to run in multiple environments; otherwise, check them in:
+-# .python-version
+-
+-# pipenv
+-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+-#   install all needed dependencies.
+-#Pipfile.lock
+-
+-# poetry
+-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+-#   This is especially recommended for binary packages to ensure reproducibility, and is more
+-#   commonly ignored for libraries.
+-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+-#poetry.lock
+-
+-# pdm
+-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+-#pdm.lock
+-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+-#   in version control.
+-#   https://pdm.fming.dev/#use-with-ide
+-.pdm.toml
+-
+-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+-__pypackages__/
+-
+-# Celery stuff
+-celerybeat-schedule
+-celerybeat.pid
+-
+-# SageMath parsed files
+-*.sage.py
+-
+-# Environments
+-.env
+-.venv
+-env/
+-venv/
+-ENV/
+-env.bak/
+-venv.bak/
+-
+-# Spyder project settings
+-.spyderproject
+-.spyproject
+-
+-# Rope project settings
+-.ropeproject
+-
+-# mkdocs documentation
+-/site
+-
+-# mypy
+-.mypy_cache/
+-.dmypy.json
+-dmypy.json
+-
+-# Pyre type checker
+-.pyre/
+-
+-# pytype static type analyzer
+-.pytype/
+-
+-# Cython debug symbols
+-cython_debug/
+-
+-# PyCharm
+-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+-#.idea/
+-
+-### Python Patch ###
+-# Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
+-poetry.toml
+-
+-# ruff
+-.ruff_cache/
+-
+-# LSP config files
+-pyrightconfig.json
+-
+-### Terraform ###
+-# Local .terraform directories
+-**/.terraform/*
+-
+-# .tfstate files
+-*.tfstate
+-*.tfstate.*
+-
+-# Crash log files
+-crash.log
+-crash.*.log
+-
+-# Exclude all .tfvars files, which are likely to contain sensitive data, such as
+-# password, private keys, and other secrets. These should not be part of version
+-# control as they are data points which are potentially sensitive and subject
+-# to change depending on the environment.
+-*.tfvars
+-*.tfvars.json
+-
+-# Ignore override files as they are usually used to override resources locally and so
+-# are not checked in
+-override.tf
+-override.tf.json
+-*_override.tf
+-*_override.tf.json
+-
+-# Include override files you do wish to add to version control using negated pattern
+-# !example_override.tf
+-
+-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
+-# example: *tfplan*
+-
+-# Ignore CLI configuration files
+-.terraformrc
+-terraform.rc
+-
+-# End of https://www.toptal.com/developers/gitignore/api/python,terraform
+\ No newline at end of file
+diff --git a/iac/monorepo/CHANGELOG.md b/iac/monorepo/CHANGELOG.md
+new file mode 100644
+index 0000000..42cf306
+--- /dev/null
++++ b/iac/monorepo/CHANGELOG.md
+@@ -0,0 +1,24 @@
++# Changelog - Monorepo
++
++## [v0.1.0] - 2024-06-12
++
++### Modulo network
++Terraform:
++- Version inicial que simula creacion de network usando `null_resource` y tomando dos variables de entrada `name` y `port`, se realiza output del nombre de la red creada y se imprime la creacion del recurso.
++
++Python:
++- Version inicial `network.py` que usa una clase constructora basada en el patron factory con parametros  name, port y da como salida un diccionario que se usara en `main.py` de directorio raiz para generar archivo `tf.json`, generando asi la configuracion de recurso compute, que sera usado finalmente para la creacion de este recurso.
++
++### Modulo compute
++Terraform:
++- Version inicial que simula creacion de server usando `null_resource` y tomando variables de entrada `name`, `network_name` para mostrar la dependencia con la red creada inicialmente y `count` para la creacion de cierto numero de instancias, se realiza output del nombre del server creado y se imprime la creacion del recurso.
++
++Python:
++- Version inicial `server.py` que usa una clase constructora basada en el patron factory con parametros name, network_name e instance_count (con valor por defecto 1) y da como salida un diccionario que se usara en `main.py` de directorio raiz para generar archivo `tf.json`, generando asi la configuracion de recurso compute, que sera usado finalmente para la creacion de un servidor que depende de la creacion de red.
++
++### Modulo storage
++Terraform:
++- Version inicial que simula creacion de database usando `null_resource` y tomando variables de entrada `name`, `network_name` y `server_name` para mostrar la dependencia con la red y server creadas y se realiza output del nombre de la db creado y su ruta y se imprime la creacion del recurso.
++
++Python:
++- Version inicial `database.py` que usa una clase constructora basada en el patron factory con parametros name, server y network (ambos son dependencias necesarias (compute, network) para la creacion del recurso de storage) y da como salida un diccionario que se usara en `main.py` de directorio raiz para generar archivo `tf.json` que sera usado finalmente para la creacion de una database que depende de la creacion de red y servidor
+diff --git a/iac/monorepo/compute-module/main.tf b/iac/monorepo/__init__.py
+similarity index 100%
+rename from iac/monorepo/compute-module/main.tf
+rename to iac/monorepo/__init__.py
+diff --git a/iac/monorepo/compute-module/variables.tf b/iac/monorepo/compute_module/__init__.py
+similarity index 100%
+rename from iac/monorepo/compute-module/variables.tf
+rename to iac/monorepo/compute_module/__init__.py
+diff --git a/iac/monorepo/compute_module/main.tf b/iac/monorepo/compute_module/main.tf
+new file mode 100644
+index 0000000..a1b2818
+--- /dev/null
++++ b/iac/monorepo/compute_module/main.tf
+@@ -0,0 +1,7 @@
++resource "null_resource" "server-1" {
++  count = var.instance_count
++
++  provisioner "local-exec" {
++    command = "echo 'Creando server ${var.name} con network ${var.network_name}'"
++  }
++}
+diff --git a/iac/monorepo/compute_module/outputs.tf b/iac/monorepo/compute_module/outputs.tf
+new file mode 100644
+index 0000000..06b3ea3
+--- /dev/null
++++ b/iac/monorepo/compute_module/outputs.tf
+@@ -0,0 +1,4 @@
++output "server_name_out" {
++  description = "El nombre del server creado"
++  value       = var.name
++}
+diff --git a/iac/monorepo/compute_module/server.py b/iac/monorepo/compute_module/server.py
+new file mode 100644
+index 0000000..30a3a62
+--- /dev/null
++++ b/iac/monorepo/compute_module/server.py
+@@ -0,0 +1,20 @@
++class ServerFatoryModule:
++    def __init__(self, name, network, instance_count=1):
++        self.name = name
++        self.network = network
++        self.server_type = "web"
++        self.instance_count = instance_count
++
++    def build(self):
++        command = f"echo 'Creando server {self.name} con network {self.network.name}'"
++
++        return [
++            {
++                "null_resource": {
++                    self.name: {
++                        "count": self.instance_count,
++                        "provisioner": {"local-exec": {"command": command}},
++                    },
++                }
++            }
++        ]
+diff --git a/iac/monorepo/compute_module/variables.tf b/iac/monorepo/compute_module/variables.tf
+new file mode 100644
+index 0000000..e47e16e
+--- /dev/null
++++ b/iac/monorepo/compute_module/variables.tf
+@@ -0,0 +1,12 @@
++variable "name" {
++  type    = string
++  default = "server-1-us-east"
++}
++
++variable "network_name" {
++  type = string
++}
++
++variable "instance_count" {
++  type = number
++}
+\ No newline at end of file
+diff --git a/iac/monorepo/main.tf b/iac/monorepo/main.tf
+index f26e2e6..ec9b918 100644
+--- a/iac/monorepo/main.tf
++++ b/iac/monorepo/main.tf
+@@ -3,4 +3,24 @@ module "network" {
+ 
+   name = "network-1"
+   port = 8080
+-}
+\ No newline at end of file
++}
++
++module "compute" {
++  source = "./compute_module"
++
++  instance_count = 4
++  name           = "server-1"
++  network_name   = module.network.network_name_out
++
++  depends_on = [module.network]
++}
++
++module "db" {
++  source = "./storage_module"
++
++  name         = "db-1"
++  server_name  = module.compute.server_name_out
++  network_name = module.network.network_name_out
++
++  depends_on = [module.network, module.compute]
++}
+diff --git a/iac/monorepo/network_module/outputs.tf b/iac/monorepo/network_module/outputs.tf
+new file mode 100644
+index 0000000..f4494b9
+--- /dev/null
++++ b/iac/monorepo/network_module/outputs.tf
+@@ -0,0 +1,4 @@
++output "network_name_out" {
++  description = "El nombre de la network creada"
++  value       = var.name
++}
+diff --git a/iac/monorepo/network_module/variables.tf b/iac/monorepo/network_module/variables.tf
+index 12d0217..131a4b2 100644
+--- a/iac/monorepo/network_module/variables.tf
++++ b/iac/monorepo/network_module/variables.tf
+@@ -1,6 +1,6 @@
+ variable "name" {
+   type    = string
+-  default = "network-us-east-1"
++  default = "network-1-us-east"
+ }
+ 
+ variable "port" {
+diff --git a/iac/monorepo/setup.py b/iac/monorepo/setup.py
+index 0edc0b9..b3cc99f 100644
+--- a/iac/monorepo/setup.py
++++ b/iac/monorepo/setup.py
+@@ -1,12 +1,22 @@
+ import json
+ from network_module.network import NetworkFactoryModule
++from compute_module.server import ServerFatoryModule
++from storage_module.database import DatabaseFactoryModule
+ 
+ if __name__ == "__main__":
+     network_name = "network-1"
++    server_name = "server-1"
++    db_name = "db-1"
+     port = 8080
+     network_factory = NetworkFactoryModule(network_name, port)
++    server_factory = ServerFatoryModule(server_name, network_factory)
++    database_factory = DatabaseFactoryModule(
++        db_name, server_factory, network_factory
++    )
+     network_build = network_factory.build()
+-    resources = {"resource": network_build}
++    server_build = server_factory.build()
++    database_build = database_factory.build()
++    resources = {"resource": network_build + server_build + database_build}
+ 
+     with open("main.tf.json", "w") as f:
+         json.dump(resources, f, indent=4)
+diff --git a/iac/monorepo/storage-module/variables.tf b/iac/monorepo/storage-module/variables.tf
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/iac/monorepo/storage-module/main.tf b/iac/monorepo/storage_module/__init__.py
+similarity index 100%
+rename from iac/monorepo/storage-module/main.tf
+rename to iac/monorepo/storage_module/__init__.py
+diff --git a/iac/monorepo/storage_module/database.py b/iac/monorepo/storage_module/database.py
+new file mode 100644
+index 0000000..39271a6
+--- /dev/null
++++ b/iac/monorepo/storage_module/database.py
+@@ -0,0 +1,19 @@
++class DatabaseFactoryModule:
++    def __init__(self, name, server, network):
++        self.name = name
++        self.server = server
++        self.network = network
++        self.database_type = "sqlite"
++
++    def build(self):
++        command = f"echo 'Creando db {self.name} con server {self.server.name} y network {self.network.name}'"
++
++        return [
++            {
++                "null_resource": {
++                    self.name: {
++                        "provisioner": {"local-exec": {"command": command}},
++                    },
++                }
++            }
++        ]
+diff --git a/iac/monorepo/storage_module/main.tf b/iac/monorepo/storage_module/main.tf
+new file mode 100644
+index 0000000..f09c0af
+--- /dev/null
++++ b/iac/monorepo/storage_module/main.tf
+@@ -0,0 +1,5 @@
++resource "null_resource" "db-1" {
++  provisioner "local-exec" {
++    command = "echo 'Creando database ${var.name} con server ${var.server_name} con network ${var.network_name}'"
++  }
++}
+diff --git a/iac/monorepo/storage_module/outputs.tf b/iac/monorepo/storage_module/outputs.tf
+new file mode 100644
+index 0000000..6320e27
+--- /dev/null
++++ b/iac/monorepo/storage_module/outputs.tf
+@@ -0,0 +1,9 @@
++output "db_name_out" {
++  description = "El nombre de la db creada"
++  value       = var.name
++}
++
++output "storage_path" {
++  description = "Path de la db"
++  value = "/db/${var.name}"
++}
+\ No newline at end of file
+diff --git a/iac/monorepo/storage_module/variables.tf b/iac/monorepo/storage_module/variables.tf
+new file mode 100644
+index 0000000..de606f6
+--- /dev/null
++++ b/iac/monorepo/storage_module/variables.tf
+@@ -0,0 +1,12 @@
++variable "name" {
++  type    = string
++  default = "db-1-us-east"
++}
++
++variable "network_name" {
++  type = string
++}
++
++variable "server_name" {
++  type = string
++}
+\ No newline at end of file
+diff --git a/src/generar_diagrama.py b/src/generar_diagrama.py
+deleted file mode 100644
+index f165461..0000000
+--- a/src/generar_diagrama.py
++++ /dev/null
+@@ -1,25 +0,0 @@
+-import os
+-import shutil
+-import sys
+-
+-def check_command(cmd):
+-    if shutil.which(cmd) is None:
+-        print(f"Error: '{cmd}' no está instalado o no está en el PATH.")
+-        sys.exit(1)
+-
+-def generar_diagrama(path, output):
+-    
+-    try:
+-        os.chdir(path)
+-        os.system('terraform init')
+-        result = os.system(f'terraform graph | dot -Tpng > {output}')
+-        if result != 0:
+-            print(f"Error generando el diagrama en {path}")
+-    except Exception as e:
+-        print(f"Ocurrió un error: {e}")
+-
+-check_command('terraform')
+-check_command('dot')
+-
+-generar_diagrama('../iac/monorepo', 'graph-monorepo.png')
+-generar_diagrama('../iac/multirepo/umbrella-repo', 'graph-multirepo.png') 
+\ No newline at end of file

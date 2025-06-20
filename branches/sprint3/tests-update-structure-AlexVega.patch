@@ -1,0 +1,250 @@
+diff --git a/.bandit b/.bandit
+new file mode 100644
+index 0000000..81a6de5
+--- /dev/null
++++ b/.bandit
+@@ -0,0 +1,6 @@
++[bandit]
++exclude = .git,.pytest_cache,.venv,venv,.terraform,tests
++skips = B101,B311
++severity-level = MEDIUM
++confidence-level = MEDIUM
++recursive = True
+\ No newline at end of file
+diff --git a/.devcontainer/devcontainer.json b/.devcontainer/devcontainer.json
+new file mode 100644
+index 0000000..1acc906
+--- /dev/null
++++ b/.devcontainer/devcontainer.json
+@@ -0,0 +1,23 @@
++{
++    "name": "tf-devcontainer",
++    "image": "debian:bullseye-slim",
++    "features": {
++        "ghcr.io/devcontainers/features/terraform:1": {},
++        "ghcr.io/devcontainers/features/python:1": {},
++        "ghcr.io/devcontainers/features/common-utils:2": {}
++    },
++    "remoteUser": "root",
++    "customizations": {
++        "vscode": {
++            "extensions": [
++                "hashicorp.terraform",
++                "ms-python.python"
++            ],
++            "settings": {
++                "editor.formatOnPaste": true,
++                "editor.formatOnSave": true
++            }
++        }
++    },
++    "postCreateCommand": "apt-get update && apt-get install -y graphviz"
++}
+\ No newline at end of file
+diff --git a/.flake8 b/.flake8
+new file mode 100644
+index 0000000..7060ab0
+--- /dev/null
++++ b/.flake8
+@@ -0,0 +1,16 @@
++[flake8]
++max-line-length = 120
++exclude = 
++    .git,
++    __pycache__,
++    build,
++    dist,
++    .venv,
++    venv,
++    .terraform
++
++ignore = 
++    E203,
++    W503,
++    E501,
++    F401 
+\ No newline at end of file
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..008ba2b
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,17 @@
++__pycache__/
++
++htmlcov/
++.coverage
++.coverage.*
++coverage.xml
++.pytest_cache/
++
++.env
++.venv
++env/
++venv/
++
++**/.terraform/*
++
++*.tfstate
++*.tfstate.*
+\ No newline at end of file
+diff --git a/__init__.py b/environments/python/__init__.py
+similarity index 100%
+rename from __init__.py
+rename to environments/python/__init__.py
+diff --git a/setup.py b/environments/python/generate_infra.py
+similarity index 52%
+rename from setup.py
+rename to environments/python/generate_infra.py
+index b3cc99f..029bfc8 100644
+--- a/setup.py
++++ b/environments/python/generate_infra.py
+@@ -1,7 +1,15 @@
+ import json
+-from network_module.network import NetworkFactoryModule
+-from compute_module.server import ServerFatoryModule
+-from storage_module.database import DatabaseFactoryModule
++import sys
++
++from pathlib import Path
++
++PROJECT_ROOT = Path(__file__).parents[2]
++sys.path.insert(0, str(PROJECT_ROOT))
++
++from modules.python.network_module.network import NetworkFactoryModule  # noqa
++from modules.python.compute_module.server import ServerFactoryModule    # noqa
++from modules.python.storage_module.database import DatabaseFactoryModule    # noqa
++
+ 
+ if __name__ == "__main__":
+     network_name = "network-1"
+@@ -9,7 +17,7 @@ if __name__ == "__main__":
+     db_name = "db-1"
+     port = 8080
+     network_factory = NetworkFactoryModule(network_name, port)
+-    server_factory = ServerFatoryModule(server_name, network_factory)
++    server_factory = ServerFactoryModule(server_name, network_factory)
+     database_factory = DatabaseFactoryModule(
+         db_name, server_factory, network_factory
+     )
+@@ -17,6 +25,8 @@ if __name__ == "__main__":
+     server_build = server_factory.build()
+     database_build = database_factory.build()
+     resources = {"resource": network_build + server_build + database_build}
++    print("Generando recursos:")
++    print(json.dumps(resources, indent=4, separators=(',', ': ')))
+ 
+     with open("main.tf.json", "w") as f:
+         json.dump(resources, f, indent=4)
+diff --git a/main.tf b/environments/terraform/main.tf
+similarity index 72%
+rename from main.tf
+rename to environments/terraform/main.tf
+index ec9b918..4693526 100644
+--- a/main.tf
++++ b/environments/terraform/main.tf
+@@ -1,12 +1,12 @@
+ module "network" {
+-  source = "./network_module"
++  source = "../../modules/terraform/network_module"
+ 
+   name = "network-1"
+   port = 8080
+ }
+ 
+ module "compute" {
+-  source = "./compute_module"
++  source = "../../modules/terraform/compute_module"
+ 
+   instance_count = 4
+   name           = "server-1"
+@@ -16,7 +16,7 @@ module "compute" {
+ }
+ 
+ module "db" {
+-  source = "./storage_module"
++  source = "../../modules/terraform/storage_module"
+ 
+   name         = "db-1"
+   server_name  = module.compute.server_name_out
+diff --git a/compute_module/server.py b/modules/python/compute_module/server.py
+similarity index 95%
+rename from compute_module/server.py
+rename to modules/python/compute_module/server.py
+index 30a3a62..47ff90e 100644
+--- a/compute_module/server.py
++++ b/modules/python/compute_module/server.py
+@@ -1,4 +1,4 @@
+-class ServerFatoryModule:
++class ServerFactoryModule:
+     def __init__(self, name, network, instance_count=1):
+         self.name = name
+         self.network = network
+diff --git a/network_module/network.py b/modules/python/network_module/network.py
+similarity index 100%
+rename from network_module/network.py
+rename to modules/python/network_module/network.py
+diff --git a/storage_module/database.py b/modules/python/storage_module/database.py
+similarity index 100%
+rename from storage_module/database.py
+rename to modules/python/storage_module/database.py
+diff --git a/compute_module/main.tf b/modules/terraform/compute_module/main.tf
+similarity index 100%
+rename from compute_module/main.tf
+rename to modules/terraform/compute_module/main.tf
+diff --git a/compute_module/outputs.tf b/modules/terraform/compute_module/outputs.tf
+similarity index 100%
+rename from compute_module/outputs.tf
+rename to modules/terraform/compute_module/outputs.tf
+diff --git a/compute_module/variables.tf b/modules/terraform/compute_module/variables.tf
+similarity index 100%
+rename from compute_module/variables.tf
+rename to modules/terraform/compute_module/variables.tf
+diff --git a/network_module/main.tf b/modules/terraform/network_module/main.tf
+similarity index 100%
+rename from network_module/main.tf
+rename to modules/terraform/network_module/main.tf
+diff --git a/network_module/outputs.tf b/modules/terraform/network_module/outputs.tf
+similarity index 100%
+rename from network_module/outputs.tf
+rename to modules/terraform/network_module/outputs.tf
+diff --git a/network_module/variables.tf b/modules/terraform/network_module/variables.tf
+similarity index 100%
+rename from network_module/variables.tf
+rename to modules/terraform/network_module/variables.tf
+diff --git a/storage_module/main.tf b/modules/terraform/storage_module/main.tf
+similarity index 100%
+rename from storage_module/main.tf
+rename to modules/terraform/storage_module/main.tf
+diff --git a/storage_module/outputs.tf b/modules/terraform/storage_module/outputs.tf
+similarity index 100%
+rename from storage_module/outputs.tf
+rename to modules/terraform/storage_module/outputs.tf
+diff --git a/storage_module/variables.tf b/modules/terraform/storage_module/variables.tf
+similarity index 100%
+rename from storage_module/variables.tf
+rename to modules/terraform/storage_module/variables.tf
+diff --git a/network_module/__init__.py b/network_module/__init__.py
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/compute_module/__init__.py b/pytest.ini
+similarity index 100%
+rename from compute_module/__init__.py
+rename to pytest.ini
+diff --git a/requirements.txt b/requirements.txt
+new file mode 100644
+index 0000000..de7c16e
+--- /dev/null
++++ b/requirements.txt
+@@ -0,0 +1,7 @@
++black
++flake8
++bandit
++
++pytest
++pytest-cov
++pytest-html
+\ No newline at end of file
+diff --git a/storage_module/__init__.py b/storage_module/__init__.py
+deleted file mode 100644
+index e69de29..0000000
